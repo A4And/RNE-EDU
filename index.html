@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+>
+
+<meta name="theme-color" content="#ffffff">
+
+<title>RNE EDU</title>
+
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+
+body {
+
+  margin: 0;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  background: #f5f5f7;
+
+  color: #1d1d1f;
+
+}
+
+
+header {
+
+  background: white;
+
+  padding:
+    max(20px, env(safe-area-inset-top))
+    20px
+    16px;
+
+  border-bottom:
+    1px solid #e5e5e5;
+
+  text-align: center;
+
+}
+
+
+header h1 {
+
+  margin: 0;
+
+  font-size: 23px;
+
+  font-weight: 700;
+
+}
+
+
+header p {
+
+  margin: 3px 0 0;
+
+  font-size: 13px;
+
+  color: #777;
+
+}
+
+
+main {
+
+  max-width: 650px;
+
+  margin: auto;
+
+  padding:
+    18px
+    16px
+    40px;
+
+}
+
+
+input {
+
+  width: 100%;
+
+  height: 52px;
+
+  padding:
+    0
+    16px;
+
+  font-size: 18px;
+
+  border:
+    1px solid #c7c7cc;
+
+  border-radius: 13px;
+
+  background: white;
+
+  outline: none;
+
+}
+
+
+input:focus {
+
+  border:
+    2px solid #007aff;
+
+}
+
+
+.hint {
+
+  margin:
+    8px
+    4px
+    14px;
+
+  color: #777;
+
+  font-size: 13px;
+
+}
+
+
+.status {
+
+  text-align: center;
+
+  color: #777;
+
+  font-size: 14px;
+
+  padding: 15px;
+
+}
+
+
+.list {
+
+  background: white;
+
+  border-radius: 13px;
+
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+
+}
+
+
+/*
+  Environ 15 communes maximum visibles,
+  puis défilement vertical.
+*/
+
+#cityList {
+
+  max-height: 650px;
+
+}
+
+
+.item {
+
+  padding:
+    14px
+    16px;
+
+  border-bottom:
+    1px solid #e5e5e5;
+
+  cursor: pointer;
+
+}
+
+
+.item:last-child {
+
+  border-bottom: none;
+
+}
+
+
+.item:active {
+
+  background: #e9e9ed;
+
+}
+
+
+.item-title {
+
+  font-size: 17px;
+
+  font-weight: 500;
+
+}
+
+
+.item-sub {
+
+  margin-top: 4px;
+
+  font-size: 14px;
+
+  color: #777;
+
+}
+
+
+.screen {
+
+  display: none;
+
+}
+
+
+.screen.active {
+
+  display: block;
+
+}
+
+
+.topbar {
+
+  display: flex;
+
+  align-items: center;
+
+  margin-bottom: 16px;
+
+}
+
+
+.back {
+
+  border: none;
+
+  background: none;
+
+  color: #007aff;
+
+  font-size: 17px;
+
+  padding:
+    6px
+    10px
+    6px
+    0;
+
+}
+
+
+.screen-title {
+
+  font-size: 21px;
+
+  font-weight: 700;
+
+  margin: 0;
+
+}
+
+
+.city-name {
+
+  font-size: 14px;
+
+  color: #777;
+
+  margin:
+    3px
+    0
+    14px;
+
+}
+
+
+.card {
+
+  background: white;
+
+  border-radius: 14px;
+
+  padding: 20px;
+
+}
+
+
+.school-name {
+
+  margin:
+    0
+    0
+    20px;
+
+  font-size: 22px;
+
+  line-height: 1.25;
+
+}
+
+
+.label {
+
+  font-size: 12px;
+
+  color: #777;
+
+  text-transform: uppercase;
+
+  margin-top: 18px;
+
+  margin-bottom: 5px;
+
+}
+
+
+.value {
+
+  font-size: 17px;
+
+  line-height: 1.5;
+
+}
+
+
+.rne {
+
+  font-size: 23px;
+
+  font-weight: 700;
+
+  color: #007aff;
+
+  letter-spacing: .5px;
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+  <h1>RNE EDU</h1>
+
+  <p>
+    Annuaire des établissements scolaires
+  </p>
+
+</header>
+
+
+<main>
+
+
+<!-- =========================
+     RECHERCHE
+========================= -->
+
+<section
+  id="searchScreen"
+  class="screen active"
+>
+
+  <input
+    id="searchInput"
+    type="search"
+    placeholder="Ville ou code postal"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="characters"
+    spellcheck="false"
+  >
+
+
+  <div class="hint">
+
+    Saisissez au moins
+    3 lettres
+    ou
+    2 chiffres
+
+  </div>
+
+
+  <div id="searchStatus"></div>
+
+
+  <div
+    id="cityList"
+    class="list"
+  ></div>
+
+
+</section>
+
+
+
+<!-- =========================
+     ETABLISSEMENTS
+========================= -->
+
+<section
+  id="schoolScreen"
+  class="screen"
+>
+
+
+  <div class="topbar">
+
+    <button
+      class="back"
+      onclick="showSearch()"
+    >
+
+      ‹ Villes
+
+    </button>
+
+  </div>
+
+
+  <h2
+    id="selectedCity"
+    class="screen-title"
+  ></h2>
+
+
+  <div
+    id="selectedCP"
+    class="city-name"
+  ></div>
+
+
+  <div
+    id="schoolStatus"
+    class="status"
+  ></div>
+
+
+  <div
+    id="schoolList"
+    class="list"
+  ></div>
+
+
+</section>
+
+
+
+<!-- =========================
+     DETAIL
+========================= -->
+
+<section
+  id="detailScreen"
+  class="screen"
+>
+
+
+  <div class="topbar">
+
+    <button
+      class="back"
+      onclick="showSchools()"
+    >
+
+      ‹ Établissements
+
+    </button>
+
+  </div>
+
+
+  <div class="card">
+
+
+    <h2
+      id="schoolName"
+      class="school-name"
+    ></h2>
+
+
+    <div class="label">
+
+      Adresse
+
+    </div>
+
+
+    <div
+      id="schoolAddress"
+      class="value"
+    ></div>
+
+
+    <div class="label">
+
+      RNE / UAI
+
+    </div>
+
+
+    <div
+      id="schoolRNE"
+      class="rne"
+    ></div>
+
+
+  </div>
+
+
+</section>
+
+
+</main>
+
+
+
+<script>
+
+
+/*
+========================================
+API ANNUAIRE DE L'EDUCATION
+========================================
+*/
+
+
+const API =
+"https://data.education.gouv.fr/api/records/1.0/search/?dataset=fr-en-annuaire-education";
+
+
+
+const input =
+document.getElementById(
+  "searchInput"
+);
+
+
+const cityList =
+document.getElementById(
+  "cityList"
+);
+
+
+const searchStatus =
+document.getElementById(
+  "searchStatus"
+);
+
+
+
+let timer = null;
+
+
+let requestNumber = 0;
+
+
+let currentCity = "";
+
+
+let currentCP = "";
+
+
+let schools = [];
+
+
+
+/*
+========================================
+NORMALISATION DU TEXTE
+========================================
+*/
+
+
+function normalizeText(text) {
+
+
+  return String(
+    text || ""
+  )
+
+  .trim()
+
+  .toUpperCase()
+
+  .normalize("NFD")
+
+  .replace(
+    /[\u0300-\u036f]/g,
+    ""
+  );
+
+}
+
+
+
+/*
+========================================
+PROTECTION HTML
+========================================
+*/
+
+
+function escapeHTML(value) {
+
+
+  return String(
+    value || ""
+  )
+
+  .replaceAll(
+    "&",
+    "&amp;"
+  )
+
+  .replaceAll(
+    "<",
+    "&lt;"
+  )
+
+  .replaceAll(
+    ">",
+    "&gt;"
+  )
+
+  .replaceAll(
+    '"',
+    "&quot;"
+  );
+
+}
+
+
+
+/*
+========================================
+CHANGEMENT D'ECRAN
+========================================
+*/
+
+
+function activate(id) {
+
+
+  document
+  .querySelectorAll(
+    ".screen"
+  )
+  .forEach(
+    screen =>
+      screen.classList.remove(
+        "active"
+      )
+  );
+
+
+  document
+  .getElementById(id)
+  .classList
+  .add(
+    "active"
+  );
+
+
+  window.scrollTo(
+    0,
+    0
+  );
+
+}
+
+
+
+/*
+========================================
+SAISIE UTILISATEUR
+========================================
+*/
+
+
+input.addEventListener(
+  "input",
+  () => {
+
+
+    clearTimeout(
+      timer
+    );
+
+
+    const value =
+      input.value.trim();
+
+
+    cityList.innerHTML =
+      "";
+
+
+    searchStatus.innerHTML =
+      "";
+
+
+    if (!value) {
+
+      return;
+
+    }
+
+
+    const numeric =
+      /^\d+$/.test(
+        value
+      );
+
+
+    /*
+      Code postal :
+      recherche à partir de 2 chiffres
+    */
+
+    if (numeric) {
+
+
+      if (
+        value.length < 2
+      ) {
+
+        return;
+
+      }
+
+
+    }
+
+
+    /*
+      Ville :
+      recherche à partir de 3 lettres
+    */
+
+    else {
+
+
+      if (
+        value.length < 3
+      ) {
+
+        return;
+
+      }
+
+
+    }
+
+
+    /*
+      Petit délai de 200 ms
+      avant d'interroger l'API.
+    */
+
+
+    timer =
+      setTimeout(
+        () => {
+
+          searchCities(
+            value,
+            numeric
+          );
+
+        },
+        200
+      );
+
+
+  }
+);
+
+
+
+/*
+========================================
+RECHERCHE DES COMMUNES
+========================================
+*/
+
+
+async function searchCities(
+  value,
+  numeric
+) {
+
+
+  const myRequest =
+    ++requestNumber;
+
+
+  searchStatus.innerHTML =
+    '<div class="status">' +
+    'Recherche…' +
+    '</div>';
+
+
+  try {
+
+
+    let query;
+
+
+
+    /*
+    -------------------------------------
+    RECHERCHE PAR CODE POSTAL
+    -------------------------------------
+    */
+
+
+    if (numeric) {
+
+
+      query =
+
+        '#startswith(code_postal,"' +
+
+        value +
+
+        '")';
+
+
+    }
+
+
+
+    /*
+    -------------------------------------
+    RECHERCHE PAR NOM DE COMMUNE
+    -------------------------------------
+
+    L'API est sensible à la casse.
+
+    Exemple :
+
+    BOR
+    devient
+    Bor
+
+    BORDEA
+    devient
+    Bordea
+
+    LES
+    devient
+    Les
+
+    -------------------------------------
+    */
+
+
+    else {
+
+
+      const apiValue =
+
+        value
+        .charAt(0)
+        .toUpperCase()
+
+        +
+
+        value
+        .slice(1)
+        .toLowerCase();
+
+
+
+      query =
+
+        '#startswith(nom_commune,"' +
+
+        apiValue
+        .replace(
+          /"/g,
+          '\\"'
+        )
+
+        +
+
+        '")';
+
+
+    }
+
+
+
+    /*
+    -------------------------------------
+    CONSTRUCTION DE LA REQUETE
+    -------------------------------------
+    */
+
+
+    const url =
+
+      API
+
+      +
+
+      "&rows=1000"
+
+      +
+
+      "&fields=nom_commune,code_postal"
+
+      +
+
+      "&q="
+
+      +
+
+      encodeURIComponent(
+        query
+      );
+
+
+
+    const response =
+      await fetch(
+        url
+      );
+
+
+
+    if (
+      !response.ok
+    ) {
+
+
+      throw new Error(
+        "Erreur API"
+      );
+
+
+    }
+
+
+
+    const data =
+      await response.json();
+
+
+
+    /*
+      Si une nouvelle recherche
+      a été lancée entre temps,
+      on ignore l'ancienne réponse.
+    */
+
+
+    if (
+      myRequest !==
+      requestNumber
+    ) {
+
+
+      return;
+
+
+    }
+
+
+
+    /*
+    -------------------------------------
+    DEDOUBLONNAGE DES COMMUNES
+    -------------------------------------
+    */
+
+
+    const map =
+      new Map();
+
+
+
+    data.records.forEach(
+      record => {
+
+
+        const f =
+          record.fields || {};
+
+
+        const city =
+
+          String(
+            f.nom_commune || ""
+          )
+          .trim();
+
+
+        const cp =
+
+          String(
+            f.code_postal || ""
+          )
+          .trim();
+
+
+
+        if (
+          !city ||
+          !cp
+        ) {
+
+
+          return;
+
+
+        }
+
+
+
+        /*
+        ---------------------------------
+        VERIFICATION LOCALE
+        ---------------------------------
+        */
+
+
+        let valid;
+
+
+
+        if (numeric) {
+
+
+          valid =
+
+            cp.startsWith(
+              value
+            );
+
+
+        }
+
+
+        else {
+
+
+          valid =
+
+            normalizeText(
+              city
+            )
+
+            .startsWith(
+
+              normalizeText(
+                value
+              )
+
+            );
+
+
+        }
+
+
+
+        if (
+          !valid
+        ) {
+
+
+          return;
+
+
+        }
+
+
+
+        /*
+          Une même ville peut apparaître
+          pour plusieurs établissements.
+
+          On ne conserve qu'un couple :
+
+          VILLE + CODE POSTAL
+        */
+
+
+        const key =
+
+          normalizeText(
+            city
+          )
+
+          +
+
+          "|"
+
+          +
+
+          cp;
+
+
+
+        if (
+          !map.has(
+            key
+          )
+        ) {
+
+
+          map.set(
+
+            key,
+
+            {
+
+              city:
+                city,
+
+              cp:
+                cp
+
+            }
+
+          );
+
+
+        }
+
+
+      }
+    );
+
+
+
+    /*
+    -------------------------------------
+    CONVERSION EN TABLEAU
+    -------------------------------------
+    */
+
+
+    let cities =
+
+      Array.from(
+        map.values()
+      );
+
+
+
+    /*
+    -------------------------------------
+    TRI ALPHABETIQUE
+    -------------------------------------
+    */
+
+
+    cities.sort(
+      (a, b) => {
+
+
+        const comparison =
+
+          a.city.localeCompare(
+
+            b.city,
+
+            "fr",
+
+            {
+
+              sensitivity:
+                "base",
+
+              ignorePunctuation:
+                true
+
+            }
+
+          );
+
+
+
+        if (
+          comparison !== 0
+        ) {
+
+
+          return comparison;
+
+
+        }
+
+
+
+        return
+
+          a.cp.localeCompare(
+            b.cp
+          );
+
+
+      }
+    );
+
+
+
+    searchStatus.innerHTML =
+      "";
+
+
+
+    displayCities(
+      cities
+    );
+
+
+  }
+
+
+
+  catch(error) {
+
+
+    console.error(
+      error
+    );
+
+
+    searchStatus.innerHTML =
+
+      '<div class="status">' +
+
+      'Impossible d’accéder à l’annuaire.' +
+
+      '</div>';
+
+
+  }
+
+
+}
+
+
+
+/*
+========================================
+AFFICHAGE DES COMMUNES
+========================================
+*/
+
+
+function displayCities(
+  cities
+) {
+
+
+  cityList.innerHTML =
+    "";
+
+
+
+  if (
+    cities.length === 0
+  ) {
+
+
+    searchStatus.innerHTML =
+
+      '<div class="status">' +
+
+      'Aucune ville trouvée' +
+
+      '</div>';
+
+
+    return;
+
+
+  }
+
+
+
+  /*
+    Les communes sont affichées
+    par ordre alphabétique.
+
+    La zone est limitée en hauteur.
+
+    L'utilisateur peut faire défiler
+    verticalement la liste.
+  */
+
+
+  cities.forEach(
+    item => {
+
+
+      const div =
+
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "item";
+
+
+      div.innerHTML =
+
+        '<div class="item-title">' +
+
+        escapeHTML(
+          item.city
+        )
+
+        +
+
+        '</div>'
+
+        +
+
+        '<div class="item-sub">' +
+
+        escapeHTML(
+          item.cp
+        )
+
+        +
+
+        '</div>';
+
+
+
+      div.onclick =
+        () => {
+
+
+          selectCity(
+
+            item.city,
+
+            item.cp
+
+          );
+
+
+        };
+
+
+
+      cityList.appendChild(
+        div
+      );
+
+
+    }
+  );
+
+
+}
+
+
+
+/*
+========================================
+SELECTION D'UNE COMMUNE
+========================================
+*/
+
+
+function selectCity(
+  city,
+  cp
+) {
+
+
+  currentCity =
+    city;
+
+
+  currentCP =
+    cp;
+
+
+
+  /*
+    On place la commune choisie
+    dans le champ de recherche.
+  */
+
+
+  input.value =
+
+    city
+
+    +
+
+    " — "
+
+    +
+
+    cp;
+
+
+
+  document
+  .getElementById(
+    "selectedCity"
+  )
+  .textContent =
+    city;
+
+
+
+  document
+  .getElementById(
+    "selectedCP"
+  )
+  .textContent =
+    cp;
+
+
+
+  activate(
+    "schoolScreen"
+  );
+
+
+
+  loadSchools();
+
+
+}
+
+
+
+/*
+========================================
+CHARGEMENT DES ETABLISSEMENTS
+========================================
+*/
+
+
+async function loadSchools() {
+
+
+  const schoolList =
+
+    document.getElementById(
+      "schoolList"
+    );
+
+
+  const status =
+
+    document.getElementById(
+      "schoolStatus"
+    );
+
+
+
+  schoolList.innerHTML =
+    "";
+
+
+  status.textContent =
+
+    "Chargement des établissements…";
+
+
+
+  try {
+
+
+    /*
+      On recherche tous les établissements
+      du code postal sélectionné.
+    */
+
+
+    const query =
+
+      '#startswith(code_postal,"'
+
+      +
+
+      currentCP
+
+      +
+
+      '")';
+
+
+
+    const url =
+
+      API
+
+      +
+
+      "&rows=500"
+
+      +
+
+      "&q="
+
+      +
+
+      encodeURIComponent(
+        query
+      );
+
+
+
+    const response =
+
+      await fetch(
+        url
+      );
+
+
+
+    if (
+      !response.ok
+    ) {
+
+
+      throw new Error(
+        "Erreur API"
+      );
+
+
+    }
+
+
+
+    const data =
+
+      await response.json();
+
+
+
+    /*
+      On garde uniquement :
+
+      - le code postal exact
+      - la commune exacte
+    */
+
+
+    schools =
+
+      data.records
+
+      .map(
+        record =>
+          record.fields || {}
+      )
+
+      .filter(
+        f => {
+
+
+          return (
+
+            String(
+              f.code_postal || ""
+            )
+            ===
+            currentCP
+
+            &&
+
+            normalizeText(
+              f.nom_commune
+            )
+            ===
+            normalizeText(
+              currentCity
+            )
+
+          );
+
+
+        }
+      );
+
+
+
+    /*
+    -------------------------------------
+    SUPPRESSION DES DOUBLONS
+    -------------------------------------
+    */
+
+
+    const unique =
+      new Map();
+
+
+
+    schools.forEach(
+      school => {
+
+
+        const key =
+
+          school
+          .identifiant_de_l_etablissement
+
+          ||
+
+          school
+          .numero_uai
+
+          ||
+
+          (
+
+            normalizeText(
+              school.nom_etablissement
+            )
+
+            +
+
+            "|"
+
+            +
+
+            normalizeText(
+              school.adresse_1
+            )
+
+          );
+
+
+
+        if (
+          !unique.has(
+            key
+          )
+        ) {
+
+
+          unique.set(
+            key,
+            school
+          );
+
+
+        }
+
+
+      }
+    );
+
+
+
+    schools =
+
+      Array.from(
+        unique.values()
+      );
+
+
+
+    /*
+    -------------------------------------
+    TRI ALPHABETIQUE
+    -------------------------------------
+    */
+
+
+    schools.sort(
+      (a, b) => {
+
+
+        return
+
+          String(
+            a.nom_etablissement || ""
+          )
+
+          .localeCompare(
+
+            String(
+              b.nom_etablissement || ""
+            ),
+
+            "fr",
+
+            {
+
+              sensitivity:
+                "base"
+
+            }
+
+          );
+
+
+      }
+    );
+
+
+
+    status.textContent =
+      "";
+
+
+
+    displaySchools();
+
+
+  }
+
+
+
+  catch(error) {
+
+
+    console.error(
+      error
+    );
+
+
+    status.textContent =
+
+      "Impossible de charger les établissements.";
+
+
+  }
+
+
+}
+
+
+
+/*
+========================================
+AFFICHAGE DES ETABLISSEMENTS
+========================================
+*/
+
+
+function displaySchools() {
+
+
+  const list =
+
+    document.getElementById(
+      "schoolList"
+    );
+
+
+  const status =
+
+    document.getElementById(
+      "schoolStatus"
+    );
+
+
+
+  list.innerHTML =
+    "";
+
+
+
+  if (
+    schools.length === 0
+  ) {
+
+
+    status.textContent =
+
+      "Aucun établissement trouvé.";
+
+
+    return;
+
+
+  }
+
+
+
+  schools.forEach(
+    (school, index) => {
+
+
+      const div =
+
+        document.createElement(
+          "div"
+        );
+
+
+      div.className =
+        "item";
+
+
+
+      const subtitle =
+
+        school
+        .type_etablissement
+
+        ||
+
+        "";
+
+
+
+      div.innerHTML =
+
+        '<div class="item-title">'
+
+        +
+
+        escapeHTML(
+
+          school
+          .nom_etablissement
+
+          ||
+
+          "Établissement"
+
+        )
+
+        +
+
+        '</div>'
+
+        +
+
+        '<div class="item-sub">'
+
+        +
+
+        escapeHTML(
+          subtitle
+        )
+
+        +
+
+        '</div>';
+
+
+
+      div.onclick =
+        () => {
+
+
+          displaySchool(
+            index
+          );
+
+
+        };
+
+
+
+      list.appendChild(
+        div
+      );
+
+
+    }
+  );
+
+
+}
+
+
+
+/*
+========================================
+AFFICHAGE DU DETAIL
+========================================
+*/
+
+
+function displaySchool(
+  index
+) {
+
+
+  const e =
+    schools[index];
+
+
+
+  document
+  .getElementById(
+    "schoolName"
+  )
+  .textContent =
+
+    e.nom_etablissement
+
+    ||
+
+    "";
+
+
+
+  /*
+    Adresse complète
+  */
+
+
+  const addressLines = [
+
+    e.adresse_1,
+
+    e.adresse_2,
+
+    e.adresse_3,
+
+    [
+
+      e.code_postal,
+
+      e.nom_commune
+
+    ]
+
+    .filter(
+      Boolean
+    )
+
+    .join(
+      " "
+    )
+
+  ]
+
+  .filter(
+    Boolean
+  );
+
+
+
+  document
+  .getElementById(
+    "schoolAddress"
+  )
+  .innerHTML =
+
+    addressLines
+
+    .map(
+      escapeHTML
+    )
+
+    .join(
+      "<br>"
+    );
+
+
+
+  /*
+    Recherche du RNE / UAI
+    selon le nom du champ disponible.
+  */
+
+
+  const rne =
+
+    e.identifiant_de_l_etablissement
+
+    ||
+
+    e.numero_uai
+
+    ||
+
+    e.uai
+
+    ||
+
+    "Non disponible";
+
+
+
+  document
+  .getElementById(
+    "schoolRNE"
+  )
+  .textContent =
+    rne;
+
+
+
+  activate(
+    "detailScreen"
+  );
+
+
+}
+
+
+
+/*
+========================================
+RETOUR VERS LA RECHERCHE
+========================================
+*/
+
+
+function showSearch() {
+
+
+  activate(
+    "searchScreen"
+  );
+
+
+  setTimeout(
+    () => {
+
+
+      input.focus();
+
+
+    },
+    100
+  );
+
+
+}
+
+
+
+/*
+========================================
+RETOUR VERS LES ETABLISSEMENTS
+========================================
+*/
+
+
+function showSchools() {
+
+
+  activate(
+    "schoolScreen"
+  );
+
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
