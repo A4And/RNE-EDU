@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>RNE EDU</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#f5f5f7;
+  color:#1d1d1f;
+}
+
+header{
+  background:white;
+  padding:max(20px,env(safe-area-inset-top)) 20px 16px;
+  border-bottom:1px solid #e5e5e5;
+  text-align:center;
+}
+
+header h1{margin:0;font-size:23px;font-weight:700}
+header p{margin:3px 0 0;font-size:13px;color:#777}
+
+main{
+  max-width:650px;
+  margin:auto;
+  padding:18px 16px 40px;
+}
+
+.search-wrapper{
+  position:relative;
+}
+
+.search-wrapper input{
+  width:100%;
+  height:52px;
+  padding:0 50px 0 16px;
+  font-size:18px;
+  border:1px solid #c7c7cc;
+  border-radius:13px;
+  background:white;
+  outline:none;
+}
+
+.search-wrapper input:focus{
+  border:2px solid #007aff;
+}
+
+.clear-search{
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:32px;
+  height:32px;
+  border:none;
+  border-radius:50%;
+  background:#e5e5ea;
+  color:#666;
+  font-size:24px;
+  line-height:30px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+
+.clear-search.visible{display:flex}
+.clear-search:active{background:#d1d1d6}
+
+.hint{
+  margin:8px 4px 14px;
+  color:#777;
+  font-size:13px;
+  line-height:1.4;
+}
+
+.status,.empty{
+  text-align:center;
+  color:#777;
+  font-size:14px;
+  padding:15px;
+}
+
+.list{
+  background:white;
+  border-radius:13px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+#resultList{max-height:650px}
+
+.item{
+  padding:14px 16px;
+  border-bottom:1px solid #e5e5e5;
+  cursor:pointer;
+}
+
+.item:last-child{border-bottom:none}
+.item:active{background:#e9e9ed}
+
+.item-title{
+  font-size:17px;
+  font-weight:500;
+}
+
+.item-sub{
+  margin-top:4px;
+  font-size:14px;
+  color:#777;
+  line-height:1.4;
+}
+
+.section-label{
+  font-size:12px;
+  font-weight:700;
+  color:#777;
+  padding:16px 4px 7px;
+  text-transform:uppercase;
+}
+
+.screen{display:none}
+.screen.active{display:block}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.back{
+  border:none;
+  background:none;
+  color:#007aff;
+  font-size:17px;
+  padding:6px 10px 6px 0;
+}
+
+.screen-title{
+  font-size:21px;
+  font-weight:700;
+  margin:0;
+}
+
+.area-info{
+  font-size:14px;
+  color:#777;
+  margin:4px 0 14px;
+  line-height:1.45;
+}
+
+.filters{
+  display:flex;
+  gap:6px;
+  margin:10px 0 14px;
+  overflow-x:auto;
+}
+
+.filter{
+  border:1px solid #d1d1d6;
+  background:white;
+  border-radius:18px;
+  padding:8px 12px;
+  font-size:14px;
+  white-space:nowrap;
+}
+
+.filter.active{
+  background:#1d1d1f;
+  color:white;
+  border-color:#1d1d1f;
+}
+
+.counter{
+  font-size:13px;
+  color:#777;
+  margin:0 4px 10px;
+}
+
+.card{
+  background:white;
+  border-radius:14px;
+  padding:20px;
+}
+
+.school-name{
+  margin:0 0 20px;
+  font-size:22px;
+  line-height:1.25;
+}
+
+.label{
+  font-size:12px;
+  color:#777;
+  text-transform:uppercase;
+  margin-top:18px;
+  margin-bottom:5px;
+}
+
+.value{
+  font-size:17px;
+  line-height:1.5;
+}
+
+.rne{
+  font-size:23px;
+  font-weight:700;
+  color:#007aff;
+  letter-spacing:.5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>RNE EDU</h1>
+  <p>Annuaire des établissements scolaires</p>
+</header>
+
+<main>
+
+<!-- RECHERCHE -->
+<section id="searchScreen" class="screen active">
+
+  <div class="search-wrapper">
+
+    <input
+      id="searchInput"
+      type="search"
+      placeholder="Ville, CP, établissement ou territoire"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+    >
+
+    <button
+      id="clearSearch"
+      class="clear-search"
+      type="button"
+      aria-label="Effacer"
+    >×</button>
+
+  </div>
+
+  <div class="hint">
+    Ville, établissement, département, académie ou région : 3 caractères · Code postal : 2 chiffres
+  </div>
+
+  <div id="searchStatus"></div>
+  <div id="resultList"></div>
+
+</section>
+
+
+<!-- ETABLISSEMENTS -->
+<section id="schoolScreen" class="screen">
+
+  <div class="topbar">
+    <button class="back" onclick="showSearch()">‹ Recherche</button>
+  </div>
+
+  <h2 id="selectedArea" class="screen-title"></h2>
+  <div id="selectedAreaInfo" class="area-info"></div>
+
+  <div class="search-wrapper">
+
+    <input
+      id="schoolSearchInput"
+      type="search"
+      placeholder="Filtrer les établissements"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+    >
+
+    <button
+      id="clearSchoolSearch"
+      class="clear-search"
+      type="button"
+      aria-label="Effacer le filtre"
+    >×</button>
+
+  </div>
+
+  <div class="filters">
+
+    <button class="filter active" data-filter="ALL">Tous</button>
+    <button class="filter" data-filter="ECOLE">Écoles</button>
+    <button class="filter" data-filter="COLLEGE">Collèges</button>
+    <button class="filter" data-filter="LYCEE">Lycées</button>
+
+  </div>
+
+  <div id="schoolCounter" class="counter"></div>
+  <div id="schoolStatus" class="status"></div>
+  <div id="schoolList" class="list"></div>
+
+</section>
+
+
+<!-- FICHE -->
+<section id="detailScreen" class="screen">
+
+  <div class="topbar">
+    <button class="back" onclick="showSchools()">‹ Établissements</button>
+  </div>
+
+  <div class="card">
+
+    <h2 id="schoolName" class="school-name"></h2>
+
+    <div class="label">Type d'établissement</div>
+    <div id="schoolType" class="value"></div>
+
+    <div class="label">Adresse</div>
+    <div id="schoolAddress" class="value"></div>
+
+    <div class="label">RNE / UAI</div>
+    <div id="schoolRNE" class="rne"></div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+<script>
+
+const API =
+"https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records";
+
+
+const input=document.getElementById("searchInput");
+const clearSearch=document.getElementById("clearSearch");
+const resultList=document.getElementById("resultList");
+const searchStatus=document.getElementById("searchStatus");
+
+const schoolSearchInput=document.getElementById("schoolSearchInput");
+const clearSchoolSearch=document.getElementById("clearSchoolSearch");
+
+
+let timer=null;
+let requestNumber=0;
+let schools=[];
+let currentPostalCodes=[];
+let currentCity="";
+let activeFilter="ALL";
+
+
+/* ==================================================
+   REGIONS ACADEMIQUES
+================================================== */
+
+const academicRegions=[
+
+  {
+    name:"Auvergne-Rhône-Alpes",
+    academies:[
+      "Clermont-Ferrand",
+      "Grenoble",
+      "Lyon"
+    ]
+  },
+
+  {
+    name:"Bourgogne-Franche-Comté",
+    academies:[
+      "Besançon",
+      "Dijon"
+    ]
+  },
+
+  {
+    name:"Bretagne",
+    academies:[
+      "Rennes"
+    ]
+  },
+
+  {
+    name:"Centre-Val de Loire",
+    academies:[
+      "Orléans-Tours"
+    ]
+  },
+
+  {
+    name:"Corse",
+    academies:[
+      "Corse"
+    ]
+  },
+
+  {
+    name:"Grand Est",
+    academies:[
+      "Nancy-Metz",
+      "Reims",
+      "Strasbourg"
+    ]
+  },
+
+  {
+    name:"Guadeloupe",
+    academies:[
+      "Guadeloupe"
+    ]
+  },
+
+  {
+    name:"Guyane",
+    academies:[
+      "Guyane"
+    ]
+  },
+
+  {
+    name:"Hauts-de-France",
+    academies:[
+      "Amiens",
+      "Lille"
+    ]
+  },
+
+  {
+    name:"Île-de-France",
+    academies:[
+      "Créteil",
+      "Paris",
+      "Versailles"
+    ]
+  },
+
+  {
+    name:"La Réunion",
+    academies:[
+      "La Réunion"
+    ]
+  },
+
+  {
+    name:"Martinique",
+    academies:[
+      "Martinique"
+    ]
+  },
+
+  {
+    name:"Mayotte",
+    academies:[
+      "Mayotte"
+    ]
+  },
+
+  {
+    name:"Normandie",
+    academies:[
+      "Normandie"
+    ]
+  },
+
+  {
+    name:"Nouvelle-Aquitaine",
+    academies:[
+      "Bordeaux",
+      "Limoges",
+      "Poitiers"
+    ]
+  },
+
+  {
+    name:"Occitanie",
+    academies:[
+      "Montpellier",
+      "Toulouse"
+    ]
+  },
+
+  {
+    name:"Pays de la Loire",
+    academies:[
+      "Nantes"
+    ]
+  },
+
+  {
+    name:"Provence-Alpes-Côte d'Azur",
+    academies:[
+      "Aix-Marseille",
+      "Nice"
+    ]
+  }
+
+];
+
+
+/* ==================================================
+   OUTILS
+================================================== */
+
+function normalizeText(text){
+
+  return String(text||"")
+    .trim()
+    .toUpperCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[-'’]/g," ")
+    .replace(/\s+/g," ");
+}
+
+
+function escapeHTML(value){
+
+  return String(value||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+
+function escapeODSQL(value){
+
+  return String(value||"")
+    .replaceAll("\\","\\\\")
+    .replaceAll('"','\\"');
+}
+
+
+function activate(id){
+
+  document.querySelectorAll(".screen")
+    .forEach(
+      s=>s.classList.remove("active")
+    );
+
+  document.getElementById(id)
+    .classList.add("active");
+
+  window.scrollTo(0,0);
+}
+
+
+/* ==================================================
+   CROIX
+================================================== */
+
+function updateClearButton(){
+
+  clearSearch.classList.toggle(
+    "visible",
+    input.value.length>0
+  );
+}
+
+
+function updateSchoolClearButton(){
+
+  clearSchoolSearch.classList.toggle(
+    "visible",
+    schoolSearchInput.value.length>0
+  );
+}
+
+
+clearSearch.addEventListener("click",()=>{
+
+  input.value="";
+  resultList.innerHTML="";
+  searchStatus.innerHTML="";
+
+  clearTimeout(timer);
+
+  requestNumber++;
+
+  updateClearButton();
+
+  input.focus();
+});
+
+
+clearSchoolSearch.addEventListener("click",()=>{
+
+  schoolSearchInput.value="";
+
+  updateSchoolClearButton();
+
+  applySchoolFilters();
+
+  schoolSearchInput.focus();
+});
+
+
+/* ==================================================
+   API PAGINEE
+================================================== */
+
+async function fetchAllRecords(where){
+
+  let records=[];
+  let offset=0;
+
+  const limit=100;
+
+  while(true){
+
+    const p=
+      new URLSearchParams();
+
+    p.set("where",where);
+    p.set("limit",String(limit));
+    p.set("offset",String(offset));
+
+    const response=
+      await fetch(
+        API+"?"+p.toString()
+      );
+
+    if(!response.ok){
+      throw new Error("API");
+    }
+
+    const data=
+      await response.json();
+
+    const page=
+      data.results||[];
+
+    records.push(...page);
+
+    if(page.length<limit){
+      break;
+    }
+
+    offset+=page.length;
+
+    if(offset>=10000){
+      break;
+    }
+  }
+
+  return records;
+}
+
+
+/* ==================================================
+   CHAMP PRINCIPAL
+================================================== */
+
+input.addEventListener("input",()=>{
+
+  updateClearButton();
+
+  clearTimeout(timer);
+
+  const value=
+    input.value.trim();
+
+  resultList.innerHTML="";
+  searchStatus.innerHTML="";
+
+  if(!value){
+    return;
+  }
+
+  const numeric=
+    /^\d+$/.test(value);
+
+  if(
+    numeric
+    &&
+    value.length<2
+  ){
+    return;
+  }
+
+  if(
+    !numeric
+    &&
+    value.length<3
+  ){
+    return;
+  }
+
+
+  /*
+    Code postal complet :
+    accès direct.
+  */
+
+  if(
+    numeric
+    &&
+    value.length===5
+  ){
+
+    timer=setTimeout(
+      ()=>openPostalCode(value),
+      150
+    );
+
+    return;
+  }
+
+
+  timer=setTimeout(
+    ()=>universalSearch(
+      value,
+      numeric
+    ),
+    250
+  );
+
+});
+
+
+/* ==================================================
+   RECHERCHE UNIVERSELLE
+================================================== */
+
+async function universalSearch(
+  value,
+  numeric
+){
+
+  const request=
+    ++requestNumber;
+
+  searchStatus.innerHTML=
+    '<div class="status">Recherche…</div>';
+
+
+  try{
+
+    const tasks=[
+
+      searchAreas(
+        value,
+        numeric
+      )
+
+    ];
+
+
+    if(!numeric){
+
+      tasks.push(
+        searchSchoolsDirect(value)
+      );
+
+      tasks.push(
+        searchTerritory(
+          "libelle_departement",
+          value
+        )
+      );
+
+      tasks.push(
+        searchTerritory(
+          "libelle_academie",
+          value
+        )
+      );
+
+      tasks.push(
+        searchTerritory(
+          "libelle_region",
+          value
+        )
+      );
+
+    }
+
+
+    const results=
+      await Promise.all(tasks);
+
+
+    if(
+      request!==requestNumber
+    ){
+      return;
+    }
+
+
+    const areas=
+      results[0]||[];
+
+
+    const directSchools=
+      numeric
+      ?
+      []
+      :
+      results[1]||[];
+
+
+    const departments=
+      numeric
+      ?
+      []
+      :
+      results[2]||[];
+
+
+    const academies=
+      numeric
+      ?
+      []
+      :
+      results[3]||[];
+
+
+    const regions=
+      numeric
+      ?
+      []
+      :
+      results[4]||[];
+
+
+    const academicRegionResults=
+      numeric
+      ?
+      []
+      :
+      searchAcademicRegions(value);
+
+
+    searchStatus.innerHTML="";
+
+
+    displayUniversalResults({
+
+      areas,
+      directSchools,
+      departments,
+      academies,
+      academicRegions:academicRegionResults,
+      regions
+
+    });
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+    searchStatus.innerHTML=
+      '<div class="status">Impossible d’accéder à l’annuaire.</div>';
+
+  }
+
+}
+
+
+/* ==================================================
+   RECHERCHE TERRITORIALE GENERIQUE
+================================================== */
+
+async function searchTerritory(
+  field,
+  value
+){
+
+  const p=
+    new URLSearchParams();
+
+
+  p.set(
+    "select",
+    field+",count(*) as nb"
+  );
+
+
+  p.set(
+    "group_by",
+    field
+  );
+
+
+  p.set(
+    "where",
+    'suggest('+
+    field+
+    ',"'+
+    escapeODSQL(value)+
+    '")'
+  );
+
+
+  p.set(
+    "order_by",
+    field+" ASC"
+  );
+
+
+  p.set(
+    "limit",
+    "1000"
+  );
+
+
+  const response=
+    await fetch(
+      API+"?"+p.toString()
+    );
+
+
+  if(!response.ok){
+    return [];
+  }
+
+
+  const data=
+    await response.json();
+
+
+  return (data.results||[])
+    .map(
+      r=>String(
+        r[field]||""
+      ).trim()
+    )
+    .filter(Boolean)
+    .filter(
+      name=>
+
+        normalizeText(name)
+        .startsWith(
+          normalizeText(value)
+        )
+
+    )
+    .filter(
+      (value,index,array)=>
+        array.indexOf(value)===index
+    )
+    .sort(
+      (a,b)=>
+        a.localeCompare(
+          b,
+          "fr",
+          {
+            sensitivity:"base"
+          }
+        )
+    )
+    .slice(0,15);
+
+}
+
+
+/* ==================================================
+   REGIONS ACADEMIQUES
+================================================== */
+
+function searchAcademicRegions(value){
+
+  const q=
+    normalizeText(value);
+
+
+  return academicRegions
+    .filter(
+      region=>
+
+        normalizeText(
+          region.name
+        )
+        .startsWith(q)
+
+    )
+    .slice(0,15);
+}
+
+
+/* ==================================================
+   VILLES + CODES POSTAUX
+================================================== */
+
+async function searchAreas(
+  value,
+  numeric
+){
+
+  let where;
+
+
+  if(numeric){
+
+    where=
+      'startswith(code_postal,"'+
+      escapeODSQL(value)+
+      '")';
+
+  }
+
+  else{
+
+    where=
+      'suggest(nom_commune,"'+
+      escapeODSQL(value)+
+      '")';
+
+  }
+
+
+  const p=
+    new URLSearchParams();
+
+
+  p.set(
+    "select",
+    "nom_commune,code_postal,count(*) as nb"
+  );
+
+
+  p.set(
+    "group_by",
+    "nom_commune,code_postal"
+  );
+
+
+  p.set(
+    "where",
+    where
+  );
+
+
+  p.set(
+    "order_by",
+    "nom_commune ASC,code_postal ASC"
+  );
+
+
+  p.set(
+    "limit",
+    "20000"
+  );
+
+
+  const response=
+    await fetch(
+      API+"?"+p.toString()
+    );
+
+
+  if(!response.ok){
+    throw new Error("API");
+  }
+
+
+  const data=
+    await response.json();
+
+
+  const map=
+    new Map();
+
+
+  (data.results||[])
+  .forEach(r=>{
+
+    const city=
+      String(
+        r.nom_commune||""
+      ).trim();
+
+
+    const cp=
+      String(
+        r.code_postal||""
+      ).trim();
+
+
+    if(!city||!cp){
+      return;
+    }
+
+
+    if(numeric){
+
+      if(
+        !cp.startsWith(value)
+      ){
+        return;
+      }
+
+    }
+
+    else{
+
+      if(
+        !normalizeText(city)
+        .startsWith(
+          normalizeText(value)
+        )
+      ){
+        return;
+      }
+
+    }
+
+
+    const key=
+      normalizeText(city);
+
+
+    if(!map.has(key)){
+
+      map.set(
+        key,
+        {
+          city:city,
+          cps:new Set()
+        }
+      );
+    }
+
+
+    map.get(key)
+      .cps
+      .add(cp);
+
+  });
+
+
+  return Array.from(
+    map.values()
+  )
+  .map(
+    x=>({
+
+      city:x.city,
+
+      cps:Array.from(
+        x.cps
+      ).sort()
+
+    })
+  )
+  .sort(
+    (a,b)=>
+
+      a.city.localeCompare(
+        b.city,
+        "fr",
+        {sensitivity:"base"}
+      )
+
+  );
+
+}
+
+
+/* ==================================================
+   RECHERCHE DIRECTE ETABLISSEMENT
+================================================== */
+
+async function searchSchoolsDirect(value){
+
+  const p=
+    new URLSearchParams();
+
+
+  p.set(
+    "where",
+    'search(nom_etablissement,"'+
+    escapeODSQL(value)+
+    '")'
+  );
+
+
+  p.set("limit","30");
+
+
+  const response=
+    await fetch(
+      API+"?"+p.toString()
+    );
+
+
+  if(!response.ok){
+    return [];
+  }
+
+
+  const data=
+    await response.json();
+
+
+  const query=
+    normalizeText(value);
+
+
+  const found=
+    (data.results||[])
+    .filter(
+      s=>
+
+        normalizeText(
+          s.nom_etablissement
+        )
+        .includes(query)
+
+    );
+
+
+  return deduplicateSchools(found)
+    .slice(0,15);
+
+}
+
+
+/* ==================================================
+   CREATION SECTION DE RESULTATS
+================================================== */
+
+function appendSection(
+  titleText,
+  items,
+  renderer
+){
+
+  if(!items||!items.length){
+    return;
+  }
+
+
+  const title=
+    document.createElement("div");
+
+  title.className=
+    "section-label";
+
+  title.textContent=
+    titleText;
+
+  resultList.appendChild(title);
+
+
+  const box=
+    document.createElement("div");
+
+  box.className=
+    "list";
+
+
+  items.forEach(
+    item=>
+      renderer(
+        item,
+        box
+      )
+  );
+
+
+  resultList.appendChild(box);
+}
+
+
+/* ==================================================
+   AFFICHAGE RECHERCHE UNIVERSELLE
+================================================== */
+
+function displayUniversalResults(data){
+
+  resultList.innerHTML="";
+
+
+  const total=
+
+    data.areas.length
+    +
+    data.directSchools.length
+    +
+    data.departments.length
+    +
+    data.academies.length
+    +
+    data.academicRegions.length
+    +
+    data.regions.length;
+
+
+  if(!total){
+
+    resultList.innerHTML=
+      '<div class="empty">Aucun résultat trouvé</div>';
+
+    return;
+  }
+
+
+  /*
+    ETABLISSEMENTS
+  */
+
+  appendSection(
+    "Établissements",
+    data.directSchools,
+    (s,box)=>{
+
+      const div=
+        document.createElement("div");
+
+      div.className="item";
+
+
+      div.innerHTML=
+
+        '<div class="item-title">'+
+
+        escapeHTML(
+          s.nom_etablissement||
+          "Établissement"
+        )
+
+        +
+
+        '</div>'+
+
+        '<div class="item-sub">'+
+
+        escapeHTML(
+
+          [
+
+            s.type_etablissement,
+
+            s.code_postal,
+
+            s.nom_commune
+
+          ]
+
+          .filter(Boolean)
+          .join(" · ")
+
+        )
+
+        +
+
+        '</div>';
+
+
+      div.onclick=
+        ()=>displaySchool(s);
+
+
+      box.appendChild(div);
+
+    }
+  );
+
+
+  /*
+    VILLES
+  */
+
+  appendSection(
+    "Villes",
+    data.areas,
+    (area,box)=>{
+
+      const div=
+        document.createElement("div");
+
+      div.className="item";
+
+
+      div.innerHTML=
+
+        '<div class="item-title">'+
+
+        escapeHTML(
+          area.city
+        )
+
+        +
+
+        '</div>'+
+
+        '<div class="item-sub">'+
+
+        escapeHTML(
+          area.cps.join(" · ")
+        )
+
+        +
+
+        '</div>';
+
+
+      div.onclick=
+        ()=>openCity(
+          area.city,
+          area.cps
+        );
+
+
+      box.appendChild(div);
+
+    }
+  );
+
+
+  /*
+    DEPARTEMENTS
+  */
+
+  appendSection(
+    "Départements",
+    data.departments,
+    (name,box)=>{
+
+      appendTerritoryItem(
+        box,
+        name,
+        "Département",
+        "libelle_departement"
+      );
+
+    }
+  );
+
+
+  /*
+    ACADEMIES
+  */
+
+  appendSection(
+    "Académies",
+    data.academies,
+    (name,box)=>{
+
+      appendTerritoryItem(
+        box,
+        name,
+        "Académie",
+        "libelle_academie"
+      );
+
+    }
+  );
+
+
+  /*
+    REGIONS ACADEMIQUES
+  */
+
+  appendSection(
+    "Régions académiques",
+    data.academicRegions,
+    (region,box)=>{
+
+      const div=
+        document.createElement("div");
+
+      div.className=
+        "item";
+
+
+      div.innerHTML=
+
+        '<div class="item-title">'+
+
+        escapeHTML(
+          region.name
+        )
+
+        +
+
+        '</div>'+
+
+        '<div class="item-sub">'+
+
+        escapeHTML(
+          region.academies.join(" · ")
+        )
+
+        +
+
+        '</div>';
+
+
+      div.onclick=
+        ()=>openAcademicRegion(region);
+
+
+      box.appendChild(div);
+
+    }
+  );
+
+
+  /*
+    REGIONS
+  */
+
+  appendSection(
+    "Régions",
+    data.regions,
+    (name,box)=>{
+
+      appendTerritoryItem(
+        box,
+        name,
+        "Région",
+        "libelle_region"
+      );
+
+    }
+  );
+
+}
+
+
+/* ==================================================
+   ITEM TERRITOIRE
+================================================== */
+
+function appendTerritoryItem(
+  box,
+  name,
+  label,
+  field
+){
+
+  const div=
+    document.createElement("div");
+
+
+  div.className=
+    "item";
+
+
+  div.innerHTML=
+
+    '<div class="item-title">'+
+
+    escapeHTML(name)
+
+    +
+
+    '</div>'+
+
+    '<div class="item-sub">'+
+
+    escapeHTML(label)
+
+    +
+
+    '</div>';
+
+
+  div.onclick=
+    ()=>openTerritory(
+      name,
+      field,
+      label
+    );
+
+
+  box.appendChild(div);
+}
+
+
+/* ==================================================
+   OUVERTURE TERRITOIRE
+================================================== */
+
+async function openTerritory(
+  name,
+  field,
+  label
+){
+
+  document.getElementById(
+    "selectedArea"
+  ).textContent=
+    name;
+
+
+  document.getElementById(
+    "selectedAreaInfo"
+  ).textContent=
+    label;
+
+
+  prepareSchoolScreen();
+
+
+  try{
+
+    const records=
+      await fetchAllRecords(
+
+        field+
+
+        '="'+
+
+        escapeODSQL(name)+
+
+        '"'
+
+      );
+
+
+    schools=
+      deduplicateSchools(
+        records
+      );
+
+
+    sortSchools();
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent=
+      "";
+
+
+    applySchoolFilters();
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent=
+      "Impossible de charger les établissements.";
+
+  }
+
+}
+
+
+/* ==================================================
+   REGION ACADEMIQUE
+================================================== */
+
+async function openAcademicRegion(region){
+
+  document.getElementById(
+    "selectedArea"
+  ).textContent=
+    region.name;
+
+
+  document.getElementById(
+    "selectedAreaInfo"
+  ).textContent=
+
+    "Région académique · "
+
+    +
+
+    region.academies.join(" · ");
+
+
+  prepareSchoolScreen();
+
+
+  try{
+
+    const conditions=
+      region.academies
+      .map(
+
+        academy=>
+
+          'libelle_academie="'+
+
+          escapeODSQL(academy)+
+
+          '"'
+
+      );
+
+
+    const where=
+
+      "("+
+
+      conditions.join(" OR ")+
+
+      ")";
+
+
+    const records=
+      await fetchAllRecords(
+        where
+      );
+
+
+    schools=
+      deduplicateSchools(
+        records
+      );
+
+
+    sortSchools();
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent=
+      "";
+
+
+    applySchoolFilters();
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent=
+      "Impossible de charger les établissements.";
+
+  }
+
+}
+
+
+/* ==================================================
+   PREPARATION LISTE ETABLISSEMENTS
+================================================== */
+
+function prepareSchoolScreen(){
+
+  schoolSearchInput.value="";
+
+  updateSchoolClearButton();
+
+  activeFilter="ALL";
+
+  updateFilterButtons();
+
+
+  document.getElementById(
+    "schoolList"
+  ).innerHTML="";
+
+
+  document.getElementById(
+    "schoolCounter"
+  ).textContent="";
+
+
+  document.getElementById(
+    "schoolStatus"
+  ).textContent=
+    "Chargement des établissements…";
+
+
+  activate(
+    "schoolScreen"
+  );
+
+}
+
+
+/* ==================================================
+   FAMILLE DE VILLES
+================================================== */
+
+function cityFamilyMatch(
+  schoolCity,
+  selectedCity
+){
+
+  const a=
+    normalizeText(
+      schoolCity
+    );
+
+
+  const b=
+    normalizeText(
+      selectedCity
+    );
+
+
+  if(a===b){
+    return true;
+  }
+
+
+  if(
+    b==="PARIS"
+    ||
+    b==="LYON"
+    ||
+    b==="MARSEILLE"
+  ){
+
+    if(
+      a.startsWith(
+        b+" "
+      )
+      &&
+      a.includes(
+        "ARRONDISSEMENT"
+      )
+    ){
+
+      return true;
+    }
+  }
+
+
+  return false;
+}
+
+
+/* ==================================================
+   CODES POSTAUX
+================================================== */
+
+async function fetchSchoolsForPostalCodes(cps){
+
+  let all=[];
+
+
+  for(const cp of cps){
+
+    const records=
+      await fetchAllRecords(
+
+        'code_postal="'+
+        escapeODSQL(cp)+
+        '"'
+
+      );
+
+
+    all.push(
+      ...records
+    );
+  }
+
+
+  return all;
+}
+
+
+/* ==================================================
+   OUVERTURE VILLE
+================================================== */
+
+async function openCity(
+  city,
+  cps
+){
+
+  currentCity=
+    city;
+
+
+  currentPostalCodes=
+    [...cps];
+
+
+  document.getElementById(
+    "selectedArea"
+  ).textContent=
+    city;
+
+
+  document.getElementById(
+    "selectedAreaInfo"
+  ).textContent=
+    cps.join(" · ");
+
+
+  prepareSchoolScreen();
+
+
+  try{
+
+    const records=
+      await fetchSchoolsForPostalCodes(
+        cps
+      );
+
+
+    schools=
+      deduplicateSchools(
+
+        records.filter(
+          s=>
+
+            currentPostalCodes.includes(
+              String(
+                s.code_postal||""
+              )
+            )
+
+            &&
+
+            cityFamilyMatch(
+              s.nom_commune,
+              city
+            )
+
+        )
+
+      );
+
+
+    sortSchools();
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent=
+      "";
+
+
+    applySchoolFilters();
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent=
+      "Impossible de charger les établissements.";
+
+  }
+
+}
+
+
+/* ==================================================
+   CODE POSTAL COMPLET
+================================================== */
+
+async function openPostalCode(cp){
+
+  const request=
+    ++requestNumber;
+
+
+  resultList.innerHTML="";
+
+
+  searchStatus.innerHTML=
+    '<div class="status">Chargement des établissements…</div>';
+
+
+  try{
+
+    const records=
+      await fetchAllRecords(
+
+        'code_postal="'+
+        escapeODSQL(cp)+
+        '"'
+
+      );
+
+
+    if(
+      request!==requestNumber
+    ){
+      return;
+    }
+
+
+    if(!records.length){
+
+      searchStatus.innerHTML=
+        '<div class="status">Aucun établissement trouvé.</div>';
+
+      return;
+    }
+
+
+    schools=
+      deduplicateSchools(
+        records
+      );
+
+
+    sortSchools();
+
+
+    const cities=[
+      ...new Set(
+
+        schools
+        .map(
+          s=>s.nom_commune
+        )
+        .filter(Boolean)
+
+      )
+    ];
+
+
+    document.getElementById(
+      "selectedArea"
+    ).textContent=
+
+      cities.length===1
+
+      ?
+
+      cities[0]
+
+      :
+
+      "Code postal "+cp;
+
+
+    document.getElementById(
+      "selectedAreaInfo"
+    ).textContent=
+      cp;
+
+
+    currentPostalCodes=
+      [cp];
+
+
+    schoolSearchInput.value="";
+
+    updateSchoolClearButton();
+
+    activeFilter="ALL";
+
+    updateFilterButtons();
+
+
+    document.getElementById(
+      "schoolStatus"
+    ).textContent="";
+
+
+    activate(
+      "schoolScreen"
+    );
+
+
+    applySchoolFilters();
+
+  }
+
+  catch(e){
+
+    console.error(e);
+
+
+    searchStatus.innerHTML=
+      '<div class="status">Impossible d’accéder à l’annuaire.</div>';
+
+  }
+
+}
+
+
+/* ==================================================
+   DEDOUBLONNAGE
+================================================== */
+
+function deduplicateSchools(records){
+
+  const map=
+    new Map();
+
+
+  records.forEach(s=>{
+
+    const key=
+
+      s.identifiant_de_l_etablissement
+
+      ||
+
+      s.numero_uai
+
+      ||
+
+      s.uai
+
+      ||
+
+      normalizeText(
+        s.nom_etablissement
+      )
+
+      +"|"+
+
+      normalizeText(
+        s.adresse_1
+      )
+
+      +"|"+
+
+      String(
+        s.code_postal||""
+      );
+
+
+    if(!map.has(key)){
+
+      map.set(
+        key,
+        s
+      );
+
+    }
+
+  });
+
+
+  return Array.from(
+    map.values()
+  );
+
+}
+
+
+/* ==================================================
+   TRI
+================================================== */
+
+function sortSchools(){
+
+  schools.sort(
+    (a,b)=>
+
+      String(
+        a.nom_etablissement||""
+      )
+      .localeCompare(
+
+        String(
+          b.nom_etablissement||""
+        ),
+
+        "fr",
+
+        {
+          sensitivity:"base"
+        }
+
+      )
+
+  );
+
+}
+
+
+/* ==================================================
+   CLASSIFICATION
+================================================== */
+
+function schoolCategory(s){
+
+  const type=
+    normalizeText(
+      s.type_etablissement
+    );
+
+
+  if(type==="ECOLE"){
+    return "ECOLE";
+  }
+
+
+  if(type==="COLLEGE"){
+    return "COLLEGE";
+  }
+
+
+  if(type==="LYCEE"){
+    return "LYCEE";
+  }
+
+
+  return "AUTRE";
+}
+
+
+/* ==================================================
+   FILTRES
+================================================== */
+
+document.querySelectorAll(
+  ".filter"
+)
+.forEach(button=>{
+
+  button.addEventListener(
+    "click",
+    ()=>{
+
+      activeFilter=
+        button.dataset.filter;
+
+      updateFilterButtons();
+
+      applySchoolFilters();
+
+    }
+  );
+
+});
+
+
+function updateFilterButtons(){
+
+  document.querySelectorAll(
+    ".filter"
+  )
+  .forEach(button=>{
+
+    button.classList.toggle(
+
+      "active",
+
+      button.dataset.filter
+      ===
+      activeFilter
+
+    );
+
+  });
+
+}
+
+
+/* ==================================================
+   FILTRE TEXTE ETABLISSEMENTS
+================================================== */
+
+schoolSearchInput.addEventListener(
+  "input",
+  ()=>{
+
+    updateSchoolClearButton();
+
+    applySchoolFilters();
+
+  }
+);
+
+
+function applySchoolFilters(){
+
+  const query=
+    normalizeText(
+      schoolSearchInput.value
+    );
+
+
+  const filtered=
+    schools.filter(s=>{
+
+
+      if(
+        activeFilter!=="ALL"
+        &&
+        schoolCategory(s)
+        !==
+        activeFilter
+      ){
+
+        return false;
+      }
+
+
+      if(!query){
+        return true;
+      }
+
+
+      const searchable=
+        normalizeText(
+
+          [
+
+            s.nom_etablissement,
+            s.type_etablissement,
+            s.code_postal,
+            s.nom_commune,
+            s.adresse_1,
+            s.adresse_2,
+            s.identifiant_de_l_etablissement,
+            s.numero_uai
+
+          ]
+
+          .filter(Boolean)
+
+          .join(" ")
+
+        );
+
+
+      return searchable.includes(
+        query
+      );
+
+    });
+
+
+  displaySchools(
+    filtered
+  );
+
+}
+
+
+/* ==================================================
+   AFFICHAGE ETABLISSEMENTS
+================================================== */
+
+function displaySchools(list){
+
+  const container=
+    document.getElementById(
+      "schoolList"
+    );
+
+
+  const counter=
+    document.getElementById(
+      "schoolCounter"
+    );
+
+
+  container.innerHTML="";
+
+
+  counter.textContent=
+
+    list.length
+
+    +
+
+    (
+      list.length>1
+      ?
+      " établissements"
+      :
+      " établissement"
+    );
+
+
+  if(!list.length){
+
+    container.innerHTML=
+      '<div class="empty">Aucun établissement correspondant.</div>';
+
+    return;
+  }
+
+
+  list.forEach(s=>{
+
+    const div=
+      document.createElement(
+        "div"
+      );
+
+
+    div.className=
+      "item";
+
+
+    div.innerHTML=
+
+      '<div class="item-title">'+
+
+      escapeHTML(
+        s.nom_etablissement
+        ||
+        "Établissement"
+      )
+
+      +
+
+      '</div>'+
+
+      '<div class="item-sub">'+
+
+      escapeHTML(
+
+        [
+
+          s.type_etablissement,
+
+          [
+            s.code_postal,
+            s.nom_commune
+          ]
+          .filter(Boolean)
+          .join(" ")
+
+        ]
+
+        .filter(Boolean)
+        .join(" · ")
+
+      )
+
+      +
+
+      '</div>';
+
+
+    div.onclick=
+      ()=>displaySchool(s);
+
+
+    container.appendChild(div);
+
+  });
+
+}
+
+
+/* ==================================================
+   FICHE
+================================================== */
+
+function displaySchool(s){
+
+  document.getElementById(
+    "schoolName"
+  ).textContent=
+    s.nom_etablissement||"";
+
+
+  document.getElementById(
+    "schoolType"
+  ).textContent=
+    s.type_etablissement
+    ||
+    "Non précisé";
+
+
+  const address=[
+
+    s.adresse_1,
+
+    s.adresse_2,
+
+    s.adresse_3,
+
+    [
+      s.code_postal,
+      s.nom_commune
+    ]
+    .filter(Boolean)
+    .join(" ")
+
+  ]
+  .filter(Boolean);
+
+
+  document.getElementById(
+    "schoolAddress"
+  ).innerHTML=
+
+    address
+    .map(escapeHTML)
+    .join("<br>");
+
+
+  document.getElementById(
+    "schoolRNE"
+  ).textContent=
+
+    s.identifiant_de_l_etablissement
+
+    ||
+
+    s.numero_uai
+
+    ||
+
+    s.uai
+
+    ||
+
+    "Non disponible";
+
+
+  activate(
+    "detailScreen"
+  );
+
+}
+
+
+/* ==================================================
+   NAVIGATION
+================================================== */
+
+function showSearch(){
+
+  activate(
+    "searchScreen"
+  );
+
+  updateClearButton();
+
+}
+
+
+function showSchools(){
+
+  activate(
+    "schoolScreen"
+  );
+
+  updateSchoolClearButton();
+
+}
+
+
+/* ==================================================
+   INITIALISATION
+================================================== */
+
+updateClearButton();
+updateSchoolClearButton();
+
+</script>
+
+</body>
+</html>
